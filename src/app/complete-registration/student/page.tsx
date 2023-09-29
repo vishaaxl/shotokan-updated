@@ -8,6 +8,8 @@ import * as Yup from "yup";
 import Link from "next/link";
 import { updateStudentInformation } from "../../../../redux/features/student.slice";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { signupUser } from "../../../../utils/user/saveToDb";
+import toast from "react-hot-toast";
 
 interface StudentCompleteRegistrationProps {}
 
@@ -24,7 +26,7 @@ export default function StudentCompleteRegistration({}: StudentCompleteRegistrat
     state: studentState.state || "",
     city: studentState.city || "",
     pincode: studentState.pincode || "",
-    photoId: studentState.photoId || null,
+    photoId: studentState.photoId || "",
     agreeTerms: studentState.agreeTerms || false,
   };
 
@@ -59,172 +61,200 @@ export default function StudentCompleteRegistration({}: StudentCompleteRegistrat
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}
-              onSubmit={(values) => {
+              onSubmit={async (values, { setSubmitting }) => {
+                setSubmitting(true);
                 dispatch(updateStudentInformation(values));
-                router.push("/");
+
+                const { email, password, ...additionalDetails } = studentState;
+                await signupUser(email, password, {
+                  ...additionalDetails,
+                  email,
+                  user: "student",
+                })
+                  .then((message) => {
+                    toast.success(message);
+                  })
+                  .catch(({ message }) => {
+                    toast.error(message.replace("Firebase:", ""));
+                  })
+                  .finally(() => {
+                    setSubmitting(false);
+                  });
               }}
             >
-              <Form className="w-full">
-                <div className="mx-auto max-w-[100%] grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Field
-                      as="select"
-                      name="belt"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                    >
-                      <option value="" label="Select Belt" />
-                      <option value="White">White</option>
-                      <option value="Yellow">Yellow</option>
-                      <option value="Orange">Orange</option>
-                      <option value="Blue">Blue</option>
-                      <option value="Green">Green</option>
-                      <option value="Purple 1">Purple 1</option>
-                      <option value="Purple 2">Purple 2</option>
-                      <option value="Brown 1">Brown 1</option>
-                      <option value="Brown 2">Brown 2</option>
-                      <option value="Brown 3">Brown 3</option>
-                      <option value="Black 1st Dan">Black 1st Dan</option>
-                      <option value="Black 2nd Dan">Black 2nd Dan</option>
-                      <option value="Black 3rd Dan">Black 3rd Dan</option>
-                      <option value="Black 4th Dan">Black 4th Dan</option>
-                      <option value="Black 5th Dan">Black 5th Dan</option>
-                      <option value="Black 6th Dan">Black 6th Dan</option>
-                      <option value="Black 7th Dan">Black 7th Dan</option>
-                    </Field>
-                    <ErrorMessage
-                      name="belt"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Field
-                      name="dob"
-                      type="text"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="Date of Birth"
-                    />
-                    <ErrorMessage
-                      name="dob"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Field
-                      name="coachName"
-                      type="text"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="Coach Name"
-                    />
-                    <ErrorMessage
-                      name="coachName"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Field
-                      name="address"
-                      type="text"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="Complete Address (House no, Locality, street)"
-                    />
-                    <ErrorMessage
-                      name="address"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Field
-                      name="state"
-                      type="text"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="State"
-                    />
-                    <ErrorMessage
-                      name="state"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Field
-                      name="city"
-                      type="text"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="City"
-                    />
-                    <ErrorMessage
-                      name="city"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Field
-                      name="pincode"
-                      type="text"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="Area Pin-code"
-                    />
-                    <ErrorMessage
-                      name="pincode"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Field
-                      name="photoId"
-                      type="file"
-                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                      placeholder="Upload Photo Id"
-                      accept="image/png, image/jpeg, image/jpg, image/gif"
-                    />
-                    <ErrorMessage
-                      name="photoId"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
-                  </div>
-                  <div className="grid col-span-2">
-                    <div className="mt-4 col-span-2 flex items-center gap-2">
-                      <Field type="checkbox" name="agreeTerms" />
-                      <div>
-                        I agree to all the{" "}
-                        <span className="text-blue-700 hover:underline cursor-pointer">
-                          terms and conditions
-                        </span>{" "}
-                        &{" "}
-                        <span className="text-blue-700 hover:underline cursor-pointer">
-                          privacy policy
-                        </span>
-                      </div>
+              {({ setFieldValue, isSubmitting }) => (
+                <Form className="w-full">
+                  <div className="mx-auto max-w-[100%] grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Field
+                        as="select"
+                        name="belt"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                      >
+                        <option value="" label="Select Belt" />
+                        <option value="White">White</option>
+                        <option value="Yellow">Yellow</option>
+                        <option value="Orange">Orange</option>
+                        <option value="Blue">Blue</option>
+                        <option value="Green">Green</option>
+                        <option value="Purple 1">Purple 1</option>
+                        <option value="Purple 2">Purple 2</option>
+                        <option value="Brown 1">Brown 1</option>
+                        <option value="Brown 2">Brown 2</option>
+                        <option value="Brown 3">Brown 3</option>
+                        <option value="Black 1st Dan">Black 1st Dan</option>
+                        <option value="Black 2nd Dan">Black 2nd Dan</option>
+                        <option value="Black 3rd Dan">Black 3rd Dan</option>
+                        <option value="Black 4th Dan">Black 4th Dan</option>
+                        <option value="Black 5th Dan">Black 5th Dan</option>
+                        <option value="Black 6th Dan">Black 6th Dan</option>
+                        <option value="Black 7th Dan">Black 7th Dan</option>
+                      </Field>
+                      <ErrorMessage
+                        name="belt"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
                     </div>
-                    <ErrorMessage
-                      name="agreeTerms"
-                      component="span"
-                      className="text-red-500 text-sm mt-2"
-                    />
+                    <div>
+                      <Field
+                        name="dob"
+                        type="date"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="Date of Birth"
+                      />
+                      <ErrorMessage
+                        name="dob"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Field
+                        name="coachName"
+                        type="text"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="Coach Name"
+                      />
+                      <ErrorMessage
+                        name="coachName"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Field
+                        name="address"
+                        type="text"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="Complete Address (House no, Locality, street)"
+                      />
+                      <ErrorMessage
+                        name="address"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Field
+                        name="state"
+                        type="text"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="State"
+                      />
+                      <ErrorMessage
+                        name="state"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Field
+                        name="city"
+                        type="text"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="City"
+                      />
+                      <ErrorMessage
+                        name="city"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Field
+                        name="pincode"
+                        type="text"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="Area Pin-code"
+                      />
+                      <ErrorMessage
+                        name="pincode"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Field
+                        value={undefined}
+                        name="photoId"
+                        type="file"
+                        className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                        placeholder="Upload Photo Id"
+                        accept="image/png, image/jpeg, image/jpg, image/gif"
+                        onChange={(e: any) => {
+                          setFieldValue("photoId", e.target.files[0]);
+                        }}
+                      />
+                      <ErrorMessage
+                        name="photoId"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
+                    <div className="grid col-span-2">
+                      <div className="mt-4 col-span-2 flex items-center gap-2">
+                        <Field type="checkbox" name="agreeTerms" />
+                        <div>
+                          I agree to all the{" "}
+                          <span className="text-blue-700 hover:underline cursor-pointer">
+                            terms and conditions
+                          </span>{" "}
+                          &{" "}
+                          <span className="text-blue-700 hover:underline cursor-pointer">
+                            privacy policy
+                          </span>
+                        </div>
+                      </div>
+                      <ErrorMessage
+                        name="agreeTerms"
+                        component="span"
+                        className="text-red-500 text-sm mt-2"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <button className="mt-5 tracking-wide font-semibold bg-blue-700 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">
-                  <CgLogIn className="text-2xl" />
-                  <span className="ml-3">Continue With Payment</span>
-                </button>
-                <div className="mt-5">
-                  Already registered on portal?{" "}
-                  <Link
-                    href="/"
-                    className="text-blue-700 hover:underline cursor-pointer"
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="disabled:opacity-30 mt-5 tracking-wide font-semibold bg-blue-700 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none"
                   >
-                    Log in
-                  </Link>
-                </div>
-              </Form>
+                    <CgLogIn className="text-2xl" />
+                    <span className="ml-3">
+                      {isSubmitting ? "Please wait" : "Continue With Payment"}
+                    </span>
+                  </button>
+                  <div className="mt-5">
+                    Already registered on portal?{" "}
+                    <Link
+                      href="/"
+                      className="text-blue-700 hover:underline cursor-pointer"
+                    >
+                      Log in
+                    </Link>
+                  </div>
+                </Form>
+              )}
             </Formik>
           </div>
         </div>

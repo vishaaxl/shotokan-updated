@@ -7,6 +7,10 @@ export const store = configureStore({
     coachReducer,
     studentReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
   devTools: process.env.NODE_ENV !== "production",
 });
 
