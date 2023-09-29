@@ -3,11 +3,27 @@
 import { useRouter } from "next-nprogress-bar";
 import Image from "next/image";
 import { CgLogIn } from "react-icons/cg";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import Link from "next/link";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { updateStudentInformation } from "../../../../redux/features/student.slice";
 
-interface StudentRegistrationProps {}
+const validationSchema = Yup.object({
+  firstName: Yup.string().required("First name is required"),
+  lastName: Yup.string().required("Last name is required"),
+  email: Yup.string().email("Invalid email").required("Email is required"),
+  phoneNumber: Yup.string().required("Phone number is required"),
+  password: Yup.string().required("Password is required"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Passwords must match")
+    .required("Confirm password is required"),
+});
 
-export default function StudentRegistration({}: StudentRegistrationProps) {
+export default function StudentRegistration() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const studentState = useAppSelector((state) => state.studentReducer);
 
   return (
     <main className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
@@ -25,57 +41,124 @@ export default function StudentRegistration({}: StudentRegistrationProps) {
                 not-relatable.
               </p>
             </div>
-            <div className="w-full flex-1 mt-8">
-              <div className="mx-auto max-w-[100%] grid md:grid-cols-2 gap-4">
-                <input
-                  className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                  type="email"
-                  placeholder="First Name"
-                />
-                <input
-                  className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                  type="password"
-                  placeholder="Last Name"
-                />
-                <div className="col-span-2">
-                  <input
-                    className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                    type="email"
-                    placeholder="Email"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <input
-                    className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                    type="email"
-                    placeholder="Phone Number"
-                  />
-                </div>
-                <input
-                  className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                  type="email"
-                  placeholder="Password"
-                />
-                <input
-                  className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                  type="email"
-                  placeholder="Confirm Password"
-                />
-              </div>
 
-              <button
-                onClick={() => router.push("/complete-registration/student")}
-                className="mt-5 tracking-wide font-semibold bg-blue-700 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none"
+            <Formik
+              initialValues={{
+                firstName: studentState.firstName || "",
+                lastName: studentState.lastName || "",
+                email: studentState.email || "",
+                phoneNumber: studentState.phoneNumber || "",
+                password: studentState.password || "",
+                confirmPassword: studentState.confirmPassword || "",
+              }}
+              validationSchema={validationSchema}
+              onSubmit={(values) => {
+                const { confirmPassword, ...rest } = values;
+                dispatch(updateStudentInformation(rest));
+                router.push("/complete-registration/student");
+              }}
+            >
+              {() => (
+                <Form className="w-full flex-1 mt-8 mx-auto max-w-[100%] grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Field
+                      name="firstName"
+                      placeholder="First Name"
+                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    />
+                    <ErrorMessage
+                      name="firstName"
+                      component="span"
+                      className="text-red-500 text-sm mt-2 block"
+                    />
+                  </div>
+
+                  <div>
+                    <Field
+                      name="lastName"
+                      placeholder="Last Name"
+                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    />
+                    <ErrorMessage
+                      name="lastName"
+                      component="span"
+                      className="text-red-500 text-sm mt-2 block"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Field
+                      name="email"
+                      placeholder="Email"
+                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white col-span-2"
+                    />
+                    <ErrorMessage
+                      name="email"
+                      component="span"
+                      className="text-red-500 text-sm mt-2 block col-span-2"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Field
+                      name="phoneNumber"
+                      placeholder="Phone Number"
+                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white col-span-2"
+                    />
+                    <ErrorMessage
+                      name="phoneNumber"
+                      component="span"
+                      className="text-red-500 text-sm mt-2 block col-span-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Field
+                      name="password"
+                      type="password"
+                      placeholder="Password"
+                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    />
+                    <ErrorMessage
+                      name="password"
+                      component="span"
+                      className="text-red-500 text-sm mt-2 block"
+                    />
+                  </div>
+
+                  <div>
+                    <Field
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Confirm Password"
+                      className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    />
+                    <ErrorMessage
+                      name="confirmPassword"
+                      component="span"
+                      className="text-red-500 text-sm mt-2 block"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="mt-5 tracking-wide font-semibold bg-blue-700 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none col-span-2"
+                  >
+                    <CgLogIn className="text-2xl" />
+                    <span className="ml-3">Complete Registration</span>
+                  </button>
+                </Form>
+              )}
+            </Formik>
+
+            <div className="mt-5">
+              Already registered on portal?{" "}
+              <Link
+                href="/"
+                className="text-blue-700 hover:underline cursor-pointer"
               >
-                <CgLogIn className="text-2xl" />
-                <span className="ml-3">Complete Registration</span>
-              </button>
-              <div className="mt-5">
-                Already registered on portal?{" "}
-                <span className="text-blue-700 hover:underline cursor-pointer">
-                  Log in
-                </span>
-              </div>
+                Log in
+              </Link>
             </div>
           </div>
         </div>
