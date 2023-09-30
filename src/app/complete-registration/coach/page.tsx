@@ -10,6 +10,7 @@ import { updateCoachInformation } from "../../../../redux/features/coach.slice";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { signupUser } from "../../../../utils/user/saveToDb";
 import toast from "react-hot-toast";
+import ImageWithForeground from "@/components/common/ImageWithForeground";
 
 interface CoachCompleteRegistrationProps {}
 
@@ -26,7 +27,7 @@ export default function CoachCompleteRegistration({}: CoachCompleteRegistrationP
     state: coachState.state || "",
     city: coachState.city || "",
     pincode: coachState.pincode || "",
-    photoId: coachState.photoId || null,
+    photoId: coachState.photoId || "",
     agreeTerms: coachState.agreeTerms || false,
   };
 
@@ -64,24 +65,34 @@ export default function CoachCompleteRegistration({}: CoachCompleteRegistrationP
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(true);
+                // setSubmitting(true);
                 dispatch(updateCoachInformation(values));
 
-                const { email, password, ...additionalDetails } = coachState;
-                await signupUser(email, password, {
-                  ...additionalDetails,
-                  email,
-                  user: "coach",
-                })
-                  .then((message) => {
-                    toast.success(message);
-                  })
-                  .catch(({ message }) => {
-                    toast.error(message.replace("Firebase:", ""));
-                  })
-                  .finally(() => {
-                    setSubmitting(false);
-                  });
+                const response = await fetch("/api/payment");
+                const { data } = await response.json();
+
+                if (response.status !== 200) {
+                  toast(response.statusText);
+                  return;
+                }
+
+                router.push(data.data.instrumentResponse.redirectInfo.url);
+
+                // const { email, password, ...additionalDetails } = coachState;
+                // await signupUser(email, password, {
+                //   ...additionalDetails,
+                //   email,
+                //   user: "coach",
+                // })
+                //   .then((message) => {
+                //     toast.success(message);
+                //   })
+                //   .catch(({ message }) => {
+                //     toast.error(message.replace("Firebase:", ""));
+                //   })
+                //   .finally(() => {
+                //     setSubmitting(false);
+                //   });
               }}
             >
               {({ setFieldValue, isSubmitting }) => (
@@ -121,7 +132,7 @@ export default function CoachCompleteRegistration({}: CoachCompleteRegistrationP
                     <div>
                       <Field
                         name="dob"
-                        type="text"
+                        type="date"
                         className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
                         placeholder="Date of Birth"
                       />
@@ -198,6 +209,7 @@ export default function CoachCompleteRegistration({}: CoachCompleteRegistrationP
                     </div>
                     <div className="col-span-2">
                       <Field
+                        value={undefined}
                         name="photoId"
                         type="file"
                         className="w-full px-6 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
@@ -260,10 +272,7 @@ export default function CoachCompleteRegistration({}: CoachCompleteRegistrationP
           </div>
         </div>
         <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
-          <div
-            className="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"
-            // style="background-image: url('https://storage.googleapis.com/devitary-image-host.appspot.com/15848031292911696601-undraw_designer_life_w96d.svg');"
-          ></div>
+          <ImageWithForeground />
         </div>
       </div>
     </main>

@@ -10,6 +10,7 @@ import { updateStudentInformation } from "../../../../redux/features/student.sli
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { signupUser } from "../../../../utils/user/saveToDb";
 import toast from "react-hot-toast";
+import ImageWithForeground from "@/components/common/ImageWithForeground";
 
 interface StudentCompleteRegistrationProps {}
 
@@ -62,24 +63,36 @@ export default function StudentCompleteRegistration({}: StudentCompleteRegistrat
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(true);
+                // setSubmitting(true);
                 dispatch(updateStudentInformation(values));
 
-                const { email, password, ...additionalDetails } = studentState;
-                await signupUser(email, password, {
-                  ...additionalDetails,
-                  email,
-                  user: "student",
-                })
-                  .then((message) => {
-                    toast.success(message);
-                  })
-                  .catch(({ message }) => {
-                    toast.error(message.replace("Firebase:", ""));
-                  })
-                  .finally(() => {
-                    setSubmitting(false);
-                  });
+                const response = await fetch("/api/payment");
+                const { data } = await response.json();
+
+                if (response.status !== 200) {
+                  toast(response.statusText);
+                  return;
+                }
+
+                router.push(data.data.instrumentResponse.redirectInfo.url);
+
+                // router.push(data.data)
+
+                // const { email, password, ...additionalDetails } = studentState;
+                // await signupUser(email, password, {
+                //   ...additionalDetails,
+                //   email,
+                //   user: "student",
+                // })
+                //   .then((message) => {
+                //     toast.success(message);
+                //   })
+                //   .catch(({ message }) => {
+                //     toast.error(message.replace("Firebase:", ""));
+                //   })
+                //   .finally(() => {
+                //     setSubmitting(false);
+                //   });
               }}
             >
               {({ setFieldValue, isSubmitting }) => (
@@ -259,10 +272,7 @@ export default function StudentCompleteRegistration({}: StudentCompleteRegistrat
           </div>
         </div>
         <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
-          <div
-            className="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"
-            // style="background-image: url('https://storage.googleapis.com/devitary-image-host.appspot.com/15848031292911696601-undraw_designer_life_w96d.svg');"
-          ></div>
+          <ImageWithForeground />
         </div>
       </div>
     </main>
